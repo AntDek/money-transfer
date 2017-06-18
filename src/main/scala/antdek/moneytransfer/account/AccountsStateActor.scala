@@ -9,7 +9,6 @@ import antdek.moneytransfer.account.AccountsStateActor.{AccountCommand, AccountN
 
 import scala.concurrent.Future
 
-
 object AccountsStateActor {
   case class AccountCommand(accountId: Int, command: AccountStateCommand)
 

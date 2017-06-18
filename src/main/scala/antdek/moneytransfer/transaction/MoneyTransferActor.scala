@@ -4,7 +4,7 @@ import akka.actor.{Actor, ActorRef}
 import akka.pattern.{ask, pipe}
 import akka.util.Timeout
 import antdek.moneytransfer.account.AccountState.Balance
-import antdek.moneytransfer.account.AccountStateActor.{Commit, GetBalance, Proposal, Rollback}
+import antdek.moneytransfer.account.AccountStateActor.GetBalance
 import antdek.moneytransfer.account.AccountsStateActor.AccountCommand
 import antdek.moneytransfer.transaction.MoneyTransferActor._
 
@@ -25,6 +25,7 @@ object MoneyTransferActor {
 class MoneyTransferActor(accountsService: ActorRef) extends Actor {
 
   import context.dispatcher
+
   import scala.concurrent.duration._
 
   implicit val timeout = Timeout(5 second)
