@@ -1,13 +1,10 @@
 package antdek.moneytransfer
 
-import akka.actor.{ActorSystem, Props}
-import akka.testkit.{ImplicitSender, TestKit}
+import akka.actor.Props
 import antdek.moneytransfer.AccountState.AccountStateResponse._
 import antdek.moneytransfer.AccountState._
-import org.scalatest._
 
-class AccountStateTest extends TestKit(ActorSystem("TestAccountService")) with ImplicitSender
-  with WordSpecLike with Matchers with BeforeAndAfterAll {
+class AccountStateTest extends ActorTestKit {
 
   private val transactionId = "transaction_id"
   private val accountId = "account_id"
@@ -80,10 +77,6 @@ class AccountStateTest extends TestKit(ActorSystem("TestAccountService")) with I
 
   private def newAccountActor = {
     system.actorOf(Props(classOf[AccountState], accountId, defaultBalance))
-  }
-
-  override def afterAll {
-    TestKit.shutdownActorSystem(system)
   }
 
 }

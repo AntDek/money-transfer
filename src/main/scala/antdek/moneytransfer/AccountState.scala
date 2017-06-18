@@ -9,10 +9,11 @@ object AccountState {
   case class Transaction(id: String, balance: Balance)
   case class Balance(amount: BigDecimal, version: Int)
 
-  case class Proposal(value: BigDecimal, version: Int, transactionId: String)
-  case class Commit(transactionId: String)
-  case class Rollback(transactionId: String)
-  case object GetBalance
+  sealed trait AccountStateCommand
+  case class Proposal(value: BigDecimal, version: Int, transactionId: String) extends AccountStateCommand
+  case class Commit(transactionId: String) extends AccountStateCommand
+  case class Rollback(transactionId: String) extends AccountStateCommand
+  case object GetBalance extends AccountStateCommand
 
   case class AccountStateResponse(state: AccountStateResponse.State)
 
