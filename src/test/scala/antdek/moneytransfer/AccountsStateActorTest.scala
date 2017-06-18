@@ -3,18 +3,25 @@ package antdek.moneytransfer
 import akka.actor.Props
 import akka.pattern.ask
 import akka.util.Timeout
-import antdek.moneytransfer.AccountState.{Balance, Commit, GetBalance, Proposal}
-import antdek.moneytransfer.AccountsStateService.{AccountCommand, ActorFactoryException}
+import antdek.moneytransfer.account.AccountState.Balance
+import antdek.moneytransfer.account.AccountStateActor._
+import antdek.moneytransfer.account.AccountsStateActor
+import antdek.moneytransfer.account.AccountsStateActor.{AccountCommand, ActorFactoryException}
 import org.scalatest.Matchers
 import org.scalatest.concurrent.ScalaFutures
 
 import scala.concurrent.duration._
 
 
-class AccountsStateServiceTest extends ActorTestKit with Matchers with ScalaFutures{
+class AccountsStateActorTest extends ActorTestKit with Matchers with ScalaFutures{
 
-  implicit val timeout = Timeout(1 second)
-  implicit val ex = system.dispatcher
+  import system.dispatcher
+  implicit val timeout = Timeout(5 second)
+
+  private val balances = Map(
+    1 -> Balance(100, 1),
+    2 -> Balance(100, 1)
+  )
 
   "Accounts State Service" must {
 
@@ -58,6 +65,6 @@ class AccountsStateServiceTest extends ActorTestKit with Matchers with ScalaFutu
   }
 
   private def newAccountsStateActor = {
-    system.actorOf(Props[AccountsStateService])
+    system.actorOf(Props(classOf[AccountsStateActor], balances))
   }
 }

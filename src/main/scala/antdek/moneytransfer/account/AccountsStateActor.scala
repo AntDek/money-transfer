@@ -1,36 +1,28 @@
-package antdek.moneytransfer
+package antdek.moneytransfer.account
 
 import akka.actor.{Actor, ActorRef, Props}
-import akka.pattern.ask
-import akka.pattern.pipe
+import akka.pattern.{ask, pipe}
 import akka.util.Timeout
-import antdek.moneytransfer.AccountState.{Balance, AccountStateCommand}
-import antdek.moneytransfer.AccountsStateService.{AccountCommand, AccountNotFound, ActorFactoryException}
+import antdek.moneytransfer.account.AccountState.Balance
+import antdek.moneytransfer.account.AccountStateActor.AccountStateCommand
+import antdek.moneytransfer.account.AccountsStateActor.{AccountCommand, AccountNotFound, ActorFactoryException}
 
 import scala.concurrent.Future
 
 
-object AccountsStateService {
-
+object AccountsStateActor {
   case class AccountCommand(accountId: Int, command: AccountStateCommand)
 
   sealed trait ActorFactoryException extends Exception
   case object AccountNotFound extends ActorFactoryException
 }
 
-class AccountsStateService extends Actor {
+class AccountsStateActor(balances: Map[Int, Balance]) extends Actor {
 
-  import concurrent.duration._
   import context.dispatcher
-  implicit val timeout = Timeout(4.seconds)
+  import concurrent.duration._
 
-  private val defaultBalances = List(
-    Balance(100, 1),
-    Balance(100, 1),
-    Balance(100, 1),
-    Balance(100, 1),
-    Balance(100, 1)
-  )
+  implicit val timeout = Timeout(5.seconds)
 
   override def receive: Receive = {
     case c: AccountCommand =>
@@ -44,15 +36,17 @@ class AccountsStateService extends Actor {
   private def accountActor(accountId: Int): Either[ActorFactoryException, ActorRef] = {
     val actorName = getActorName(accountId)
     context.child(actorName).map(Right(_)).getOrElse {
-      if (accountId < defaultBalances.size)
-        Right(createActor(accountId, actorName))
-      else
-        Left(AccountNotFound)
+      balances.get(accountId)
+        .map(balance => Right(createActor(balance, actorName)))
+        .getOrElse(Left(AccountNotFound))
     }
   }
 
-  private def createActor(accountId: Int, actorName: String): ActorRef = {
-    context.actorOf(Props(classOf[AccountState], accountId.toString, defaultBalances(accountId)), name = actorName)
+  private def createActor(balance: Balance, actorName: String): ActorRef = {
+    context.actorOf(
+      Props(classOf[AccountStateActor], new AccountState(balance)),
+      name = actorName
+    )
   }
 
   private def getActorName(accountId: Int): String = {

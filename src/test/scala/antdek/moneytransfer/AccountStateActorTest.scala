@@ -1,13 +1,19 @@
 package antdek.moneytransfer
 
 import akka.actor.Props
-import antdek.moneytransfer.AccountState.AccountStateResponse._
-import antdek.moneytransfer.AccountState._
+import akka.actor.Status.Failure
+import akka.util.Timeout
+import antdek.moneytransfer.account.AccountState.Balance
+import antdek.moneytransfer.account.{AccountState, AccountStateActor}
+import antdek.moneytransfer.account.AccountStateActor._
 
-class AccountStateTest extends ActorTestKit {
+import scala.concurrent.duration._
+
+class AccountStateActorTest extends ActorTestKit {
+
+  implicit val timeout = Timeout(5 second)
 
   private val transactionId = "transaction_id"
-  private val accountId = "account_id"
   private val defaultBalance = Balance(100, 1)
   private val defaultProposal = Proposal(30, defaultBalance.version, transactionId)
 
@@ -20,27 +26,27 @@ class AccountStateTest extends ActorTestKit {
 
     "except proposal" in {
       newAccountActor ! defaultProposal
-      expectMsg(AccountStateResponse(ProposalAccepted))
+      expectMsg(ProposalAccepted)
     }
 
     "commit transaction" in {
       val accountActor = newAccountActor
 
       accountActor ! defaultProposal
-      expectMsg(AccountStateResponse(ProposalAccepted))
+      expectMsg(ProposalAccepted)
 
       accountActor ! Commit(transactionId)
-      expectMsg(AccountStateResponse(CommitApplied))
+      expectMsg(CommitApplied)
     }
 
     "rollback transaction" in {
       val accountActor = newAccountActor
 
       accountActor ! defaultProposal
-      expectMsg(AccountStateResponse(ProposalAccepted))
+      expectMsg(ProposalAccepted)
 
       accountActor ! Rollback(transactionId)
-      expectMsg(AccountStateResponse(TransactionAborted))
+      expectMsg(RollbackApplied)
     }
   }
 
@@ -50,17 +56,17 @@ class AccountStateTest extends ActorTestKit {
       val proposal = Proposal(3, invalidVersion, transactionId)
 
       newAccountActor ! proposal
-      expectMsg(AccountStateResponse(InvalidVersion))
+      expectMsg(Failure(InvalidVersion))
     }
 
     "reject proposal if transaction is in progress" in {
       val actor = newAccountActor
 
       actor ! defaultProposal
-      expectMsg(AccountStateResponse(ProposalAccepted))
+      expectMsg(ProposalAccepted)
 
       actor ! defaultProposal
-      expectMsg(AccountStateResponse(ProposalDeclined))
+      expectMsg(InTransaction)
     }
 
     "reject commit if transaction is incorrect" in {
@@ -68,15 +74,15 @@ class AccountStateTest extends ActorTestKit {
       val incorrectTransactionIs = "incorrect_transaction"
 
       actor ! defaultProposal
-      expectMsg(AccountStateResponse(ProposalAccepted))
+      expectMsg(ProposalAccepted)
 
       actor ! Commit(incorrectTransactionIs)
-      expectMsg(AccountStateResponse(InvalidTransactionId))
+      expectMsg(Failure(InvalidTransactionId))
     }
   }
 
   private def newAccountActor = {
-    system.actorOf(Props(classOf[AccountState], accountId, defaultBalance))
+    system.actorOf(Props(classOf[AccountStateActor], new AccountState(defaultBalance)))
   }
 
 }
