@@ -31,6 +31,6 @@ object Main extends App {
   val apiRoutes: Route = new HttpRoutes(moneyTransferActor, accountsStateActor).routes
 
   Http().bindAndHandle(apiRoutes, httpInterface, httpPort)
-  actorSystem.log.info("Server online at http://{}:{}/", httpInterface, httpPort)
+  actorSystem.log.info("Server online on http://{}:{}/", httpInterface, httpPort)
 
 }

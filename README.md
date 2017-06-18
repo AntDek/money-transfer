@@ -22,3 +22,8 @@ curl -X POST \
 	"amount": 1500
 }'
 ```
+
+### Resources
+- https://en.wikipedia.org/wiki/Two-phase_commit_protocol
+- http://blog.jupo.org/2016/01/28/distributed-transactions-in-actor-systems/
+- https://www.slideshare.net/ktoso/distributed-consensus-aka-what-do-we-eat-for-lunch

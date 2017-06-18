@@ -20,7 +20,6 @@ object AccountStateActor {
   case object RollbackApplied extends AccountStateCommandResponse
 
   sealed trait TransactionException extends Exception
-  case object TransactionAborted extends TransactionException
   case object InvalidVersion extends TransactionException
   case object InvalidTransactionId extends TransactionException
   case object InTransaction extends TransactionException
